@@ -1,0 +1,50 @@
+name: buildAndroid
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  buildAndroid:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r21e
+          
+      - name: Set Android NDK Root
+        run: echo "::set-env name=ANDROID_NDK_ROOT::${{ steps.setup-ndk.outputs.ndk-path }}"
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1.1.5
+        with:
+          haxe-version: 4.2.5
+
+      # Resto de tu configuración...
+
+      - name: Compile
+        run: haxelib run lime build android --app-version="4.0.0-${{ github.run_id }}"
+
+      - name: Publish Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Android Build
+          path: export/release/android/bin/app/build/outputs/apk/debug
